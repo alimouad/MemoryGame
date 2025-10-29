@@ -4,6 +4,7 @@ let lockBoard =  false
 let firstCard,secondCard;
 let time = 10;
 let flipCount = 0;
+let score = 0;
 let hasFlippedCard = false;
 
 
@@ -11,7 +12,7 @@ let hasFlippedCard = false;
 cards.forEach(card=> card.addEventListener('click',flipCard))
 
 function flipCard(){
-
+    checkWin()
     if (lockBoard) return;
     if (this === firstCard) return;
 
@@ -28,10 +29,18 @@ function flipCard(){
         checkForMatch();   // now compare both cards
     }
 }
-
 function checkForMatch() {
     const isMatch = firstCard.dataset.frame === secondCard.dataset.frame;
-    isMatch ? disableCards() : unflipCards();
+    if (isMatch) {
+        score += 10; 
+        disableCards();
+    } else {
+        score -= 2;   
+        unflipCards();
+    }
+
+    updateScoreDisplay();
+    checkWin();
 }
 
 function disableCards() {
@@ -65,22 +74,46 @@ function shuffle(){
 };
 shuffle();
 
+function checkWin() {
+    if (flipCount >= 30) {
+        const popUp = document.querySelector('.popUpMsg');
+        const layerGround = document.querySelector('.layerGround');
+        const totalCards = cards.length;
+        const flippedCards = document.querySelectorAll('.card.flip').length;
 
-// function startPlay(){
-//      let generate = setInterval(() => {
-//         //  const minute = Math.floor(time / 60)
-//          let seconds = time % 60;
-//          time--;
-          
-//             if(seconds === 0){
-//                time = 0;
-//                     clearInterval(generate)                  
-//                    cards.forEach(card => {
-//                     card.removeEventListener('click',flipCard)
-//                     if(!card.classList.contains('flip')){
-//                          console.log('ali you lose')
-//                     }               
-//                 })
-//             }
-//         }, 1000);
-// }
+        // Show overlay and popup
+        popUp.style.display = 'flex';
+        layerGround.style.display = 'flex';
+
+        cards.forEach(card => card.removeEventListener('click', flipCard));
+        let resultHTML = '';
+
+        if (flippedCards === totalCards) {
+            resultHTML = `
+                <p class="winMsg">🎉 You Win! 😊</p>
+                <p class="scoreMsg">Score: ${score}</p>
+                <button class="replay">Replay</button>
+            `;
+        } else {
+            resultHTML = `
+                <p class="lostMsg">😒 You Lost!</p>
+                <p class="scoreMsg">Score: ${score}</p>
+                <button class="replay">Replay</button>
+            `;
+        }
+
+        popUp.innerHTML = resultHTML;
+        const replayBtn = popUp.querySelector('.replay');
+        replayBtn.addEventListener('click', () => {
+            popUp.style.display = 'none';
+            layerGround.style.display = 'none';
+            resetGame();
+        });
+    }
+}
+
+
+function resetGame(){
+    window.location.reload()
+}
+
